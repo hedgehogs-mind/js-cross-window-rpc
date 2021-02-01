@@ -107,6 +107,10 @@ callCrossWindowExecutor(
 })    
 ```
 
+# Example
+
+Check out the two html files in the directory `example`. It contains a use case for this RPC script.
+
 # Background
 
 This implementation is based on following features:
