@@ -80,9 +80,9 @@ Sample request:
 
 {
     commIndex: 0,
-    commChannel: "SCORM",
+    commChannel: "test",
     commType: "request",
-    method: "LMS_GET",
+    method: "foo",
     args: ["abc"] // optional
 }
 
@@ -91,9 +91,9 @@ Sample response:
 
 {
     commIndex: 0,
-    commChannel: "SCORM",
+    commChannel: "test",
     commType: "response",
-    method: "LMS_GET",
+    method: "foo",
     success: true
     result: "Hello World" // this is optional
 }
@@ -102,11 +102,11 @@ Or an error response:
 
 {
     commIndex: 0,
-    commChannel: "SCORM",
+    commChannel: "test",
     commType: "response",
-    method: "LMS_GET",
+    method: "foo",
     success: false
-    result: "'apply' is not a function"
+    result: "'foo' is not a function"
 }
 
 */
