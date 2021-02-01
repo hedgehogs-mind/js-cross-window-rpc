@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+
+    <!-- imported library -->
+    <script src="./../src/cross_window_rpc.js"></script>
+    
+  </head>
+  <body style="background: black; color: white;">
+
+    <h1>Sub Frame</h1>
+    <p>
+      You can convert some names to the girl version. The conversion is done by a service inside the parent frame. We call this service using the RPC implementation.
+    </p>
+    <p>
+      Names the remote service knows:
+      <ul>
+        <li>Peter</li>
+        <li>Anton</li>
+        <li>Michael</li>
+      </ul>
+    </p>
+
+
+    <input id="name" value="Peter" placeholder="name">
+    <br>
+
+    <button id="convert">Convert to girl name</button>
+    <br>
+    <br>
+    <br>
+
+    <label>Result</label>
+    <br>
+    <textarea id="output" rows="8" cols="50"></textarea>
+    <br>
+
+
+  </body>
+
+  <script>
+    const nameInput = document.querySelector("input#name")
+    const convertButton = document.querySelector("button#convert")
+    const output = document.querySelector("textarea#output")
+
+    const proxy = createCrossWindowExecutorProxy(
+        parent.window,
+        "name_conversion",
+        1000
+    )
+
+    convertButton.addEventListener("click", () => {
+      output.value = ""
+
+      proxy.convertToGirlName(nameInput.value)
+        .then(result => { output.value = "Success: " + result })
+        .catch(error => { output.value = "Call error: " + error })
+    })
+
+  </script>
+</html>
