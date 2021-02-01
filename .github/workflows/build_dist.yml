@@ -18,7 +18,7 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Auto Minify
+      - name: Minify src/
         # You may pin to the exact commit or the version.
         # uses: nizarmah/auto-minify@f8323743bad5df5496e89eb086cb8aeb5e523866
         uses: nizarmah/auto-minify@v2.0
@@ -26,3 +26,15 @@ jobs:
           directory: src/
           output: dist/
           maxdepth: 10
+          
+      - name: Commit dist/
+        uses: stefanzweifel/git-auto-commit-action@v4.8.0
+        with:
+          commit_message: "Actions: Updated dist/"
+          branch: main
+          file_pattern: dist/*
+          commit_user_name: hedgehogs-mind
+          commit_user_email: peter@hedgehogs-mind.com
+          commit_author: Peter Kuhmann (via Github Actions)
+          push_options: '--force'
+          skip_fetch: true
