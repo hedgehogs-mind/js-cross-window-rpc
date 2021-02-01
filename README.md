@@ -1,4 +1,4 @@
-# Javascript Cross Origin Frame RPC
+# JavaScript Cross Origin Frame RPC
 
 This tiny script enables you to call functions of an object, which sits in a (cross origin) frame, from an other frame.
 
