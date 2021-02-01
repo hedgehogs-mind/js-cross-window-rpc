@@ -16,7 +16,7 @@ We need to set up the remote "service" / executor. First import the script:
 
 ```
 <head>
-    <script src="cross_window_rpc.js"></script>
+    <script src="dist/cross_window_rpc.min.js"></script>
 </head>
 ```
 
@@ -48,7 +48,7 @@ On the caller side, first import the script - just like on the receiver side:
 
 ```
 <head>
-    <script src="cross_window_rpc.js"></script>
+    <script src="dist/cross_window_rpc.min.js"></script>
 </head>
 ```
 
