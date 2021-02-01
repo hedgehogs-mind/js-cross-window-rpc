@@ -35,6 +35,5 @@ jobs:
           file_pattern: dist/*
           commit_user_name: hedgehogs-mind
           commit_user_email: peter@hedgehogs-mind.com
-          commit_author: Peter Kuhmann (via Github Actions)
           push_options: '--force'
           skip_fetch: true
