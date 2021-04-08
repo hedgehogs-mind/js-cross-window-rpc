@@ -30,6 +30,19 @@ const targetObject = {
 
     greet: function(name) {
         return `Hello ${name}! How are you today?`
+    },
+
+    asyncGreet: function(name) {
+        return Promise((resolve, reject) => {
+            const timeout = parseInt(Math.random() * 500)
+
+            setTimeout(
+                () => {
+                    resolve(`Hello ${name}! How are you today?`)
+                },
+                timeout
+            )
+        })
     }
 }
 
@@ -74,6 +87,10 @@ service.foo()
     .then(result => { console.log(result) })    // will output "bar"
 
 service.greet("Peter")
+    .then(result => { console.log(result) })    // will output "Hello Peter! How are you today?"
+
+// The receiver can also handle promise results of the called methods
+service.asyncGreet("Peter")
     .then(result => { console.log(result) })    // will output "Hello Peter! How are you today?"
 
 service.someFunction()

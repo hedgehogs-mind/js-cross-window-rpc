@@ -37,6 +37,11 @@
     <textarea id="output" rows="8" cols="50"></textarea>
     <br>
 
+    <hr>
+
+    <button id="promiseSuccess">Promise Test success</button>
+    <button id="promiseError">Promise Test error</button>
+
 
   </body>
 
@@ -57,6 +62,17 @@
       proxy.convertToGirlName(nameInput.value)
         .then(result => { output.value = "Success: " + result })
         .catch(error => { output.value = "Call error: " + error })
+    })
+
+    document.querySelector("#promiseSuccess").addEventListener("click", () => {
+      proxy.promisePong("Peter")
+        .then(result => console.log("Got result: "+result))
+    })
+
+    document.querySelector("#promiseError").addEventListener("click", () => {
+      proxy.promisePong("error")
+        .then(result => console.log("Got result: "+result))
+        .catch(result => console.log("Got error: "+result))
     })
 
   </script>

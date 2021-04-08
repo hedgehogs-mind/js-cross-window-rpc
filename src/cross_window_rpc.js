@@ -126,72 +126,72 @@ function callCrossWindowExecutor(targetWindow, commChannel, method, argArray, ti
 
     return new Promise((resolve, reject) => {
 
-    let alreadyHandledByListener = false
-    let decayTimeout = null
+        let alreadyHandledByListener = false
+        let decayTimeout = null
 
-    function handleResponse(event) {
-    if ( event.data ) {
-        const response = event.data
+        function handleResponse(event) {
+            if ( event.data ) {
+                const response = event.data
 
-        // Check if response matches request
-        if ( response.commIndex === callIndex &&
-            response.commChannel === commChannel && 
-            response.commType === "response" &&
-            response.method === method
-        ) {
-        alreadyHandledByListener = true
-        if ( decayTimeout !== null ) clearTimeout(decayTimeout)
+                // Check if response matches request
+                if ( response.commIndex === callIndex &&
+                    response.commChannel === commChannel && 
+                    response.commType === "response" &&
+                    response.method === method
+                ) {
+                    alreadyHandledByListener = true
+                    if ( decayTimeout !== null ) clearTimeout(decayTimeout)
 
-        window.removeEventListener("message", handleResponse)
+                    window.removeEventListener("message", handleResponse)
 
-        if ( response.success ) {
-            if ( response.result ) resolve(response.result)
-            else resolve()
-        } else {
-            reject(response.result ? response.result : new Error("Remote call returned with success = false. No error message given."))
+                    if ( response.success ) {
+                        if ( response.result ) resolve(response.result)
+                        else resolve()
+                    } else {
+                        reject(response.result ? response.result : new Error("Remote call returned with success = false. No error message given."))
+                    }
+                }
+            }
         }
+
+        window.addEventListener("message", handleResponse)
+
+        // message array = [FUNCTION_NAME, ...ARGS]
+        const message = {
+            commIndex: callIndex,
+            commChannel: commChannel,
+            commType: "request",
+            method: method,
+            args: !!argArray ? argArray : []
         }
-    }
-    }
 
-    window.addEventListener("message", handleResponse)
+        targetWindow.postMessage(message, "*")
 
-    // message array = [FUNCTION_NAME, ...ARGS]
-    const message = {
-    commIndex: callIndex,
-    commChannel: commChannel,
-    commType: "request",
-    method: method,
-    args: !!argArray ? argArray : []
-    }
+        if ( !alreadyHandledByListener ) {
+            decayTimeout = setTimeout(() => {
+                window.removeEventListener("message", handleResponse)
 
-    targetWindow.postMessage(message, "*")
-
-    if ( !alreadyHandledByListener ) {
-        decayTimeout = setTimeout(() => {
-            window.removeEventListener("message", handleResponse)
-
-            reject(new Error(`Remote call timeout. Got no response from called window after ${timeout} ms.`))
-        }, timeout)
+                reject(new Error(`Remote call timeout. Got no response from called window after ${timeout} ms.`))
+            }, timeout)
         }
 
     })
 }
 
 function createCrossWindowExecutorProxy(targetWindow, commChannel, timeout = 2000) {
-return new Proxy({}, {
-    get: function(target, prop, receiver) {
-    return function() {
-        return callCrossWindowExecutor(
-        targetWindow,
-        commChannel,
-        prop,
-        [...arguments],
-        timeout
-        )
-    }
-    }
-})
+    return new Proxy({}, {
+        get: function(target, prop, receiver) {
+            return function() {
+                return callCrossWindowExecutor(
+                    targetWindow,
+                    commChannel,
+                    prop,
+                    [...arguments],
+                    timeout
+                )
+            }
+        }
+    })
 }
 
 
@@ -211,44 +211,61 @@ function setupCrossWindowExecutor(callTarget, commChannel) {
             request.commIndex !== undefined ) {
 
             let success = false
-            let result = null
+            let callResult = null
 
             if ( !request.method ) {
-                result = "method name was empty/not given"
+                callResult = "method name was empty/not given"
 
             } else {
                 const methodOfCallTarget = callTarget[request.method]
 
                 if ( methodOfCallTarget === undefined ) {
-                    result = `'${request.method}' does not exist`
+                    callResult = `'${request.method}' does not exist`
                 } else if ( typeof methodOfCallTarget.apply !== "function" ) {
-                    result = `'${request.method}' is not a function`
+                    callResult = `'${request.method}' is not a function`
                 } else {
                     try {
-                        result = methodOfCallTarget.apply(
+                        callResult = methodOfCallTarget.apply(
                             callTarget, 
                             Array.isArray(request.args) ? request.args : []
                         )
                         success = true
                     } catch(error) {
-                        result = error.toString()
+                        callResult = error.toString()
                     }
                 }
             }
 
-            const responseMessage = {
-                commIndex: request.commIndex,
-                commChannel: commChannel,
-                commType: "response",
-                method: request.method,
-                success: success,
-            }
+            Promise.resolve(callResult).then((result) => {
+                const responseMessage = {
+                    commIndex: request.commIndex,
+                    commChannel: commChannel,
+                    commType: "response",
+                    method: request.method,
+                    success: success,
+                }
+    
+                if ( result !== undefined && result !== null ) {
+                    responseMessage.result = result
+                }
+    
+                event.source.postMessage(responseMessage, "*")
 
-            if ( result !== undefined && result !== null ) {
-                responseMessage.result = result
-            }
-
-            event.source.postMessage(responseMessage, "*")
+            }).catch((error) => {
+                const responseMessage = {
+                    commIndex: request.commIndex,
+                    commChannel: commChannel,
+                    commType: "response",
+                    method: request.method,
+                    success: false,
+                }
+    
+                if ( error !== undefined && error !== null ) {
+                    responseMessage.result = error
+                }
+    
+                event.source.postMessage(responseMessage, "*")
+            })
         }
     }
 

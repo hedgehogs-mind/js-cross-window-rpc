@@ -29,6 +29,23 @@
             else if ( name === "Michael" ) return "Michaela"
 
             throw new Error("Can not convert name "+name+" to girl version.")
+        },
+        promisePong: function(name) {
+          return new Promise((resolve, reject) => {
+            const timeout = parseInt(Math.random() * 500)
+
+            if ( name == "error" ) {
+              setTimeout(() => {
+                reject("Dummy error. Timeout was: "+timeout.toString())
+              }, timeout)
+
+            } else {
+              setTimeout(() => {
+                resolve("Got ya, "+name+"! Timeout was: "+timeout.toString())
+              }, timeout)
+
+            }
+          })
         }
     }
 
