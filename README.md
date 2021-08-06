@@ -124,6 +124,20 @@ callCrossWindowExecutor(
 })    
 ```
 
+## 4. Relay in intermediate frames/windows
+
+If you want to relay requests/responses in intermediate frames/windows, just execute the following within the intermediate frames:
+
+```
+setupCrossWindowMessageRelay(
+    // relay target. responses for requests are sent back to the requests' sources.
+    window.parent,
+
+    // channel name
+    "name_conversion"
+)
+```
+
 # Example
 
 Check out the two html files in the directory `example`. It contains a use case for this RPC script.
