@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" style="height: 100%">
   <head>
     <meta charset="utf-8">
     <title></title>
 
     <!-- imported library -->
-    <script src="./../src/cross_window_rpc.js"></script>
+    <script src="./../../src/cross_window_rpc.js"></script>
     
   </head>
-  <body style="background: black; color: white;">
+  <body style="background: black; color: white;" style="height: 100%">
 
-    <h1>Sub Frame</h1>
+    <h1>Sub Frame 3 - Sender</h1>
     <p>
       You can convert some names to the girl version. The conversion is done by a service inside the parent frame. We call this service using the RPC implementation.
     </p>
@@ -51,7 +51,7 @@
     const output = document.querySelector("textarea#output")
 
     const proxy = createCrossWindowExecutorProxy(
-        parent.window,
+        window.parent,
         "name_conversion",
         1000
     )

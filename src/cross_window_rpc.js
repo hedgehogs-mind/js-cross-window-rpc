@@ -50,7 +50,7 @@ There are two ways to call a remote object's function:
 
 # Receiver side
 
-On the receiver side you only need to create a handler which receives RPC requests and executes methods of a certain object:
+On the receiver side you only need to create a handler which receives RPC requests and executes sync or async methods of a certain object:
 
     const handler = {
         convertToGirlName: function(name) {
@@ -59,6 +59,14 @@ On the receiver side you only need to create a handler which receives RPC reques
             else if ( name === "Michael" ) return "Michaela"
 
             throw new Error("Can not convert name "+name+" to girl version.")
+        },
+
+        asyncMethod: function(name) {
+            return Promise(resolve => {
+                setTimeout(() => {
+                    resolve(handler.convertToGirlName(name))
+                }, 400)
+            })
         }
     }
 
@@ -67,6 +75,18 @@ On the receiver side you only need to create a handler which receives RPC reques
         "super-secret-channel"   // channel name
     )
 
+
+# Relay betwenn frames/windows
+
+If an intermediate frame or window wants to connect sender and receiver you can establish one or more relays
+in intermediate frames.
+
+Just call `setupCrossWindowMessageRelay(relayTarget, commChannel)`. relayTarget is the e.g. the parent window.
+
+
+# Debug logs
+
+Sender, relays and receiver perform basic console.debug()-calls which allows basic data flow debugging.
 
 */
 
@@ -139,6 +159,8 @@ function callCrossWindowExecutor(targetWindow, commChannel, method, argArray, ti
                     response.commType === "response" &&
                     response.method === method
                 ) {
+                    console.debug(`Sender: Received response. [commChannel: '${response.commChannel}', commIndex: ${response.commIndex}]`)
+
                     alreadyHandledByListener = true
                     if ( decayTimeout !== null ) clearTimeout(decayTimeout)
 
@@ -165,7 +187,10 @@ function callCrossWindowExecutor(targetWindow, commChannel, method, argArray, ti
             args: !!argArray ? argArray : []
         }
 
+        
         targetWindow.postMessage(message, "*")
+
+        console.debug(`Sender: Sent request. [commChannel: '${message.commChannel}', commIndex: ${message.commIndex}]`)
 
         if ( !alreadyHandledByListener ) {
             decayTimeout = setTimeout(() => {
@@ -210,6 +235,8 @@ function setupCrossWindowExecutor(callTarget, commChannel) {
             request.commType === "request" &&
             request.commIndex !== undefined ) {
 
+            console.debug(`Receiver: Received request. [commChannel: '${request.commChannel}', commIndex: ${request.commIndex}]`)
+
             let success = false
             let callResult = null
 
@@ -248,8 +275,10 @@ function setupCrossWindowExecutor(callTarget, commChannel) {
                 if ( result !== undefined && result !== null ) {
                     responseMessage.result = result
                 }
-    
+
                 event.source.postMessage(responseMessage, "*")
+
+                console.debug(`Receiver: Finished receiver side execution. Sent response. [commChannel: '${request.commChannel}', commIndex: ${request.commIndex}]`)
 
             }).catch((error) => {
                 const responseMessage = {
@@ -266,6 +295,45 @@ function setupCrossWindowExecutor(callTarget, commChannel) {
     
                 event.source.postMessage(responseMessage, "*")
             })
+        }
+    }
+
+    window.addEventListener("message", listener)
+
+    return listener
+}
+
+
+// ####### Relay
+
+function setupCrossWindowMessageRelay(relayTarget, commChannel) {
+
+    this.commIndexSources = {}
+
+    const listener = function relayMessageListener(event) {
+        const message = event.data
+
+        if ( message && 
+            message.commChannel === commChannel && 
+            message.commIndex !== undefined ) {
+
+            if ( message.commType === "request" ) {
+                
+                console.debug(`Relay: Received request. Redirecting request to relay target. [commChannel: '${message.commChannel}', commIndex: ${message.commIndex}]`)
+
+                // redirect request and save event source
+                relayTarget.postMessage(message, "*")                
+                this.commIndexSources[message.commIndex.toString()] = event.source
+
+            } else if ( message.commType === "response" ) {
+
+                console.debug(`Relay: Received respone. Sending response back to source. [commChannel: '${message.commChannel}', commIndex: ${message.commIndex}]`)
+
+                // extract source
+                const source = this.commIndexSources[message.commIndex.toString()]
+                source.postMessage(message, "*")
+
+            }
         }
     }
 
