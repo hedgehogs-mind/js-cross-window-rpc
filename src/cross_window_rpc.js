@@ -327,12 +327,16 @@ function setupCrossWindowMessageRelay(relayTarget, commChannel) {
 
             } else if ( message.commType === "response" ) {
 
-                console.debug(`Relay: Received respone. Sending response back to source. [commChannel: '${message.commChannel}', commIndex: ${message.commIndex}]`)
-
                 // extract source
                 const source = this.commIndexSources[message.commIndex.toString()]
-                source.postMessage(message, "*")
 
+                if ( source ) {
+                    console.debug(`Relay: Received respone. Sending response back to source. [commChannel: '${message.commChannel}', commIndex: ${message.commIndex}]`)
+                    source.postMessage(message, "*")
+                } else {
+                    console.debug(`Relay: Warning > Received response, but source unknown (there was no request beforehand). [commChannel: '${message.commChannel}', commIndex: ${message.commIndex}]`)
+                }
+                
             }
         }
     }
